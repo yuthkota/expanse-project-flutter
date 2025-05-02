@@ -80,7 +80,7 @@ export const updateExpense = async (req, res, next) => {
       return res.status(400).json({ error: "Amount, category, and date are required" })
     }
 
-    // Check if expense exists and belongs to user
+    // Check if expense exists and belongs to the user
     const expense = await ExpenseModel.findById(id)
     if (!expense) {
       return res.status(404).json({ error: "Expense not found" })
