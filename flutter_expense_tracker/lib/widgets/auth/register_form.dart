@@ -5,10 +5,10 @@ class RegisterForm extends StatefulWidget {
   final bool isLoading;
 
   const RegisterForm({
-    Key? key,
+    super.key,
     required this.onSubmit,
     required this.isLoading,
-  }) : super(key: key);
+  });
 
   @override
   _RegisterFormState createState() => _RegisterFormState();

@@ -11,7 +11,7 @@ import 'package:expense_tracker/models/category_stat.dart';
 import 'package:intl/intl.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({Key? key}) : super(key: key);
+  const HomeScreen({super.key});
 
   @override
   _HomeScreenState createState() => _HomeScreenState();
@@ -93,6 +93,51 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  void _handleEdit(Expense expense) async {
+    final result = await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => AddExpenseScreen(
+          expenseService: _expenseService,
+          existingExpense: expense,
+        ),
+      ),
+    );
+    if (result == true) {
+      await _fetchData();
+    }
+  }
+
+  void _handleDelete(Expense expense) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delete Expense'),
+        content: const Text('Are you sure you want to delete this expense?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      try {
+        await _expenseService.deleteExpense(expense.id!);
+        await _fetchData();
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error deleting expense: $e')),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final authService = Provider.of<AuthService>(context);
@@ -135,7 +180,11 @@ class _HomeScreenState extends State<HomeScreen> {
               child: Center(child: CircularProgressIndicator()),
             )
           else if (_selectedIndex == 0)
-            ExpenseList(expenses: _expenses)
+            ExpenseList(
+              expenses: _expenses,
+              onEdit: _handleEdit,
+              onDelete: _handleDelete,
+            )
           else
             ExpenseChart(stats: _stats),
         ],
@@ -160,7 +209,7 @@ class _HomeScreenState extends State<HomeScreen> {
             _selectedIndex = index;
           });
         },
-        items: [
+        items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.list),
             label: 'Expenses',

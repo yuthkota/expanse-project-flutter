@@ -5,10 +5,12 @@ import 'package:intl/intl.dart';
 
 class AddExpenseScreen extends StatefulWidget {
   final ExpenseService expenseService;
+  final Expense? existingExpense;  // Add this parameter for editing existing expenses
 
   const AddExpenseScreen({
     Key? key,
     required this.expenseService,
+    this.existingExpense,  // Make the parameter optional
   }) : super(key: key);
 
   @override
@@ -34,6 +36,19 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
     'Other',
   ];
 
+  @override
+  void initState() {
+    super.initState();
+
+    if (widget.existingExpense != null) {
+      // Pre-fill the fields if an existingExpense is passed
+      _amountController.text = widget.existingExpense!.amount.toString();
+      _selectedCategory = widget.existingExpense!.category;
+      _selectedDate = widget.existingExpense!.date;
+      _notesController.text = widget.existingExpense!.notes ?? '';
+    }
+  }
+
   Future<void> _selectDate() async {
     final DateTime? picked = await showDatePicker(
       context: context,
@@ -55,29 +70,34 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
       });
 
       try {
-        // Create expense object
+        // Create or update the expense object
         final expense = Expense(
-          id: 0, // Will be assigned by the server
-          userId: 0, // Will be assigned by the server
+          id: widget.existingExpense?.id ?? 0, // Use existing ID if editing
+          userId: widget.existingExpense?.userId ?? 0, // Use existing userId
           amount: double.parse(_amountController.text),
           category: _selectedCategory,
           date: _selectedDate,
           notes: _notesController.text.isEmpty ? null : _notesController.text,
         );
 
-        // Add expense
-        await widget.expenseService.addExpense(expense);
+        if (widget.existingExpense == null) {
+          // Add new expense
+          await widget.expenseService.addExpense(expense);
+        } else {
+          // Update existing expense
+          await widget.expenseService.updateExpense(expense);
+        }
 
         // Show success message
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Expense added successfully')),
+          SnackBar(content: Text(widget.existingExpense == null ? 'Expense added successfully' : 'Expense updated successfully')),
         );
 
         // Return to previous screen
         Navigator.of(context).pop(true);
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error adding expense: $e')),
+          SnackBar(content: Text('Error saving expense: $e')),
         );
       } finally {
         setState(() {
@@ -91,7 +111,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Add Expense'),
+        title: Text(widget.existingExpense == null ? 'Add Expense' : 'Edit Expense'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -169,9 +189,9 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                 else
                   ElevatedButton(
                     onPressed: _submitForm,
-                    child: const Text(
-                      'Add Expense',
-                      style: TextStyle(fontSize: 16),
+                    child: Text(
+                      widget.existingExpense == null ? 'Add Expense' : 'Save Changes',
+                      style: const TextStyle(fontSize: 16),
                     ),
                   ),
               ],

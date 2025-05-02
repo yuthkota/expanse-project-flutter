@@ -6,7 +6,7 @@ import 'package:expense_tracker/widgets/auth/login_form.dart';
 import 'package:expense_tracker/widgets/auth/register_form.dart';
 
 class AuthScreen extends StatefulWidget {
-  const AuthScreen({Key? key}) : super(key: key);
+  const AuthScreen({super.key});
 
   @override
   _AuthScreenState createState() => _AuthScreenState();

@@ -92,4 +92,42 @@ class ExpenseService {
       rethrow;
     }
   }
+
+ Future<void> updateExpense(Expense expense) async {
+  try {
+    final response = await http.put(
+      Uri.parse('${ApiConfig.baseUrl}${ApiConfig.expenses}/${expense.id}'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode(expense.toJson()),
+    );
+    
+    if (response.statusCode != 200) {
+      throw Exception('Failed to update expense');
+    }
+  } catch (e) {
+    rethrow;
+  }
+}
+
+Future<void> deleteExpense(int id) async {
+  try {
+    final response = await http.delete(
+      Uri.parse('${ApiConfig.baseUrl}${ApiConfig.expenses}/$id'),
+      headers: {
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (response.statusCode != 200) {
+      final data = jsonDecode(response.body);
+      throw Exception(data['error'] ?? 'Failed to delete expense');
+    }
+  } catch (e) {
+    rethrow;
+  }
+}
+
 }
